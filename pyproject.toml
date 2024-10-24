@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "moekani"
+version = "0.1.0"
+description = ""
+authors = ["lubbly-jubbly <libby.rear@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+genanki = "^0.13.1"
+ankitools = "^0.3.7"
+pandas = "^2.2.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

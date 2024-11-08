@@ -195,7 +195,7 @@ def add_sort_field_to_wanikani_model(model_id, field_names):
     # print(fields_data)
     # fields_data.append('')
 
-    cursor.execute("INSERT INTO FIELDS (ntid, ord, name, config) VALUES (?, ?, ?, ?)", (ntid, ord, name, default_config))
+    # cursor.execute("INSERT INTO FIELDS (ntid, ord, name, config) VALUES (?, ?, ?, ?)", (ntid, ord, name, default_config))
     return
 
 def add_sort_field_to_wanikani_notes(card_ids_ordered, field_names):
@@ -211,17 +211,21 @@ def add_sort_field_to_wanikani_notes(card_ids_ordered, field_names):
                 fields_data.append('')  # Add an empty field if it's missing
 
             # Update the 'sort' field (last field in the list)
-            fields_data[-1] = str(sort_index)
+            fields_data[-1] = str(sort_index) 
 
             # Recombine the fields and update the note
-            updated_fields = '\\x1f'.join(fields_data)
+            updated_fields = '\\x1f'.join(fields_data) | ''
 
             cursor.execute("UPDATE notes SET flds = ? WHERE id = ?", (updated_fields, note_id))
 
-add_sort_field_to_wanikani_model(wanikani_kanji_model_id, wanikani_kanji_field_names)
+# add_sort_field_to_wanikani_model(wanikani_kanji_model_id, wanikani_kanji_field_names)
 add_sort_field_to_wanikani_notes(wanikani_kanji_card_ids_ordered, wanikani_kanji_field_names)
+notes = get_all_notes(cursor)
+# notes2 = get_notes_for_model(wanikani_vocab_model_id)
+conn.commit()
 # print_table_data(cursor, 'notes')
 cards = get_notes_for_model(cursor, wanikani_kanji_model_id)
+print(cards[0:5])
 # print_all_table_fields(cursor)
 # print_table_data(cursor, 'fields')
 # print(cards[0:6])

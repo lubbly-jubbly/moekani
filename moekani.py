@@ -112,7 +112,7 @@ def print_table_data(cursor, table_name):
         # Print field names and values together
         print(dict(zip(column_names, deck)))
 
-wanikani_deck_path = "/Users/libbyrear/Documents/moekani decks/Wanikani.apkg"
+wanikani_deck_path = "/Users/libbyrear/Documents/moekani decks/WaniKani.apkg"
 moe_deck_path =  "/Users/libbyrear/Documents/moekani decks/TheMoeWay.apkg"
 # output_path = "/Users/libbyrear/Documents/bucket/wanikani"
 output_path = "/Users/libbyrear/Library/Application Support/Anki2 copy/User 1"
@@ -183,21 +183,6 @@ for kanji in kanji_ordered_unique:
 
 #  Add 'sort' field to wanikani decks
 
-def add_sort_field_to_wanikani_model(model_id, field_names):
-    ntid = int(model_id)
-    name = "sort"
-    ord = len(field_names)
-    default_config = b'\x1a\x08Segoe UI \x10\xfa\x0f\x0c{"media":[]}'
-
-    # cursor.execute(f"SELECT * FROM fields")
-    # # column_names = [description[0] for description in cursor.description]
-    # fields_data = cursor.fetchall()
-    # print(fields_data)
-    # fields_data.append('')
-
-    # cursor.execute("INSERT INTO FIELDS (ntid, ord, name, config) VALUES (?, ?, ?, ?)", (ntid, ord, name, default_config))
-    return
-
 def add_sort_field_to_wanikani_notes(card_ids_ordered, field_names):
 # Loop through the note_ids and update their 'sort' field
     for sort_index, note_id in enumerate(card_ids_ordered):
@@ -214,14 +199,12 @@ def add_sort_field_to_wanikani_notes(card_ids_ordered, field_names):
             fields_data[-1] = str(sort_index) 
 
             # Recombine the fields and update the note
-            updated_fields = '\\x1f'.join(fields_data) | ''
+            updated_fields = '\\x1f'.join(fields_data)
 
             cursor.execute("UPDATE notes SET flds = ? WHERE id = ?", (updated_fields, note_id))
 
-# add_sort_field_to_wanikani_model(wanikani_kanji_model_id, wanikani_kanji_field_names)
 add_sort_field_to_wanikani_notes(wanikani_kanji_card_ids_ordered, wanikani_kanji_field_names)
 notes = get_all_notes(cursor)
-# notes2 = get_notes_for_model(wanikani_vocab_model_id)
 conn.commit()
 # print_table_data(cursor, 'notes')
 cards = get_notes_for_model(cursor, wanikani_kanji_model_id)

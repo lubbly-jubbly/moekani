@@ -5,6 +5,26 @@ import json
 import re
 import csv 
 
+# Steps to work this script:
+# 1. Add field to anki: Browse > Fields... > Add > Moe_Sort_Order (or whatever you want to call it) > Ok
+# 2. Export anki notes as text file: File > Export... > Export format: Notes in plain text (.txt), Include: [WaniKani deck], tick all boxes > Export... > Any folder
+# 3. Import text file to google sheets: File > Import > Separator Type: Tab
+# 4. Export as csv: File > Download > csv. Save to wanikani_kanji_csv_path
+# 5. Run script (uncomment desired function call)
+# 6. Check all good with WaniKani_Vocab_New.csv / WaniKani_Kanji_New.csv
+# 7. In anki, go to file > Import... > Choose file > 
+#   Field separator: comma
+#   Choose correct Notetype and Deck
+#   Check fields
+#   Add Tags field which is empty for some reason
+#   Check that Existing Notes: Update
+#   > Import. It should say X cardsfound in existing notes were updated.
+# 8. Go to Browse for deck. Add new Moe_Sort_Order field to the browse table columns, and click to sort by it in ascending order.
+# 9. Save the deck in this order: Cmd A (select all cards) > Cards > Reposition... > 
+#   Leave Randomise order unticked and Shift position of existing cards ticked. > Ok
+
+
+
 def extract_apkg(apkg_path, output_dir):
     with zipfile.ZipFile(apkg_path, 'r') as zip_ref:
         zip_ref.extractall(output_dir)
@@ -55,7 +75,6 @@ def get_card_data_for_model(cursor, model_id, models):
 
 def format_card_data(notes, field_names):
     cards = []
-    print(notes)
     for note in notes:
         note_id = note[0]
         fields_data = note[2].split('\x1f') 
@@ -110,6 +129,7 @@ def find_kanji_combos(expression):
 def add_sort_field_to_kanji_csv():
     wanikani_kanji_cards = open_csv_as_list(wanikani_kanji_csv_path)
 
+    # Find the kanji in the moe deck, ordered by appearance in moe deck
     kanji_ordered = []
     for card in moe_cards:
         kanji_in_card = find_kanji_combos(card['Expression'])
@@ -134,26 +154,23 @@ def add_sort_field_to_kanji_csv():
 def add_sort_field_to_vocab_csv():
     wanikani_vocab_cards = open_csv_as_list(wanikani_vocab_csv_path)
 
-    kanji_combos_ordered = []
-    for card in moe_cards:
-        kanji_combos_in_card = find_kanji_combos(card['Expression'])
-        for kanji_combo in kanji_combos_in_card:
-            kanji_combos_ordered.append(kanji_combo)
-        
-    kanji_combos_ordered_unique = list(dict.fromkeys(kanji_combos_ordered))
+    def trim_kana(phrase):
+        return re.sub(r'^[\u3040-\u30FFー〜]+|[\u3040-\u30FFー〜]+$', '', phrase)
 
-    # Find the desired order of the wanikani deck corresponding 
-    # to the kanji order of appearance in moe deck
-    wanikani_vocab_card_ids_ordered = []
-    for kanji_combo in kanji_combos_ordered_unique:
-        vocab_containing_kanji_pattern = re.compile(r'(^|[^\u4E00-\u9FFF])' + re.escape(kanji_combo) + r'($|[^\u4E00-\u9FFF])')
-        for card in wanikani_vocab_cards:
-            if bool(vocab_containing_kanji_pattern.search(card[3])):
-                wanikani_vocab_card_ids_ordered.append(card[0])
-    wanikani_vocab_card_ids_ordered = list(set(wanikani_vocab_card_ids_ordered))
-# i think maybe reverse the order of this loop
-    add_sort_field_to_card_list(wanikani_vocab_cards, wanikani_vocab_card_ids_ordered)
-    print(wanikani_vocab_cards[0:15])
+    for wanikani_card in wanikani_vocab_cards[6:len(wanikani_vocab_cards)]:
+        trimmed_vocab = trim_kana(wanikani_card[3])
+        for moe_card_index, moe_card in enumerate(moe_cards):
+            # Use regex to ensure trimmed_vocab is surrounded only by kana, not kanji (and thus likely part of a larger word)
+            pattern = fr'(?:[^\u4E00-\u9FFF]|^){re.escape(trimmed_vocab)}(?:[^\u4E00-\u9FFF]|$)'
+            if re.search(pattern, moe_card['Expression']):
+                wanikani_card[-2] = moe_card_index
+                break
+        # If wanikani vocab word not found in moe deck, assign it a high sort number
+        if wanikani_card[-2] == '':
+            wanikani_card[-2] = len(wanikani_vocab_cards)
+        # Delete the id etc fields (which are not anki card fields)
+        del wanikani_card[:3]
+  
     export_to_csv(wanikani_vocab_csv_output_path, wanikani_vocab_cards)
 
 def add_sort_field_to_card_list(cards, ordered_card_ids):
@@ -169,3 +186,4 @@ def export_to_csv(output_path, card_list):
         writer.writerows(card_list)
 
 add_sort_field_to_vocab_csv()
+# add_sort_field_to_kanji_csv()

@@ -3,7 +3,9 @@ import zipfile
 import json
 import re
 
-# 1. Extract decks and connect to the db for each deck
+# THIS SCRIPT DOESN'T WORK - It proved very difficult to edit the anki deck directly, 
+# so I opted to export the deck as a csv, edit it and import the edited version into anki.
+# Keeping this attempt here to refer back to and possibly work out in future.
 
 def extract_apkg(apkg_path, output_dir):
     with zipfile.ZipFile(apkg_path, 'r') as zip_ref:
@@ -114,11 +116,11 @@ def print_table_data(cursor, table_name):
 
 wanikani_deck_path = "/Users/libbyrear/Documents/moekani decks/WaniKani.apkg"
 moe_deck_path =  "/Users/libbyrear/Documents/moekani decks/TheMoeWay.apkg"
-# output_path = "/Users/libbyrear/Documents/bucket/wanikani"
 output_path = "/Users/libbyrear/Library/Application Support/Anki2 copy/User 1"
 wanikani_output_path = output_path + "wanikani"
 moe_output_path = output_path + "moe"
 
+# 1. Extract decks and connect to the db for each deck
 conn = get_db_conn(output_path)
 
 cursor = conn.cursor()
